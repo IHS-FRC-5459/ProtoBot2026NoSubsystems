@@ -11,22 +11,9 @@
           }
         },
         {
-          "type": "race",
+          "type": "named",
           "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "elevatorUp"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 0.02
-                }
-              }
-            ]
+            "name": "elevatorUp"
           }
         },
         {

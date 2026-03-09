@@ -11,6 +11,12 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "elevatorUp"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Auto7-AlignToShootGoToHub"

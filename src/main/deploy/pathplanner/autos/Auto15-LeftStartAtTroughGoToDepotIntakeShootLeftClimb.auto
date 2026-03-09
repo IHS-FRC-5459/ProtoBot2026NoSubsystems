@@ -11,22 +11,9 @@
           }
         },
         {
-          "type": "race",
+          "type": "named",
           "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "elevatorUp"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 0.02
-                }
-              }
-            ]
+            "name": "elevatorUp"
           }
         },
         {
@@ -60,15 +47,28 @@
           "data": {
             "commands": [
               {
-                "type": "named",
-                "data": {
-                  "name": "hubAlign"
-                }
-              },
-              {
                 "type": "wait",
                 "data": {
                   "waitTime": 0.5
+                }
+              },
+              {
+                "type": "parallel",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Intake"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "hubAlign"
+                      }
+                    }
+                  ]
                 }
               }
             ]
@@ -124,15 +124,28 @@
           "data": {
             "commands": [
               {
-                "type": "named",
-                "data": {
-                  "name": "hubAlign"
-                }
-              },
-              {
                 "type": "wait",
                 "data": {
                   "waitTime": 0.5
+                }
+              },
+              {
+                "type": "parallel",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "hubAlign"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Intake"
+                      }
+                    }
+                  ]
                 }
               }
             ]
