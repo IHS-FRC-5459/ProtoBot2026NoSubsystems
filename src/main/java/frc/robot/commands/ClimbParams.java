@@ -10,7 +10,6 @@ import static frc.robot.subsystems.vision.VisionConstants.*;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import frc.robot.subsystems.DistanceCaching;
 import org.littletonrobotics.junction.Logger;
 
 // pose's x < half field
@@ -23,15 +22,15 @@ import org.littletonrobotics.junction.Logger;
 /** Add your docs here. */
 public class ClimbParams {
   private int xMultiplier = 1; // Sign for x-direction
-  private int yMultiplier = -1; // Sign for y-direction
-  private int step2YMult = -1;
-  private boolean isFront = false;
+  private int yMultiplier = 1; // Sign for y-direction
   private int omegaMultiplier = 1; // Sign for rotation
+  private boolean isFront = false;
   private Pose2d goal;
-  private DistanceCaching distCache;
 
   // Notes: Left and right mean left and right if you were to face the climb structure standing on
   // the field of whatever structure you are climbing
+
+  // TODO: Get actual x, y of these 4 cacenarios
 
   public ClimbParams(Pose2d estPose) {
 
@@ -41,41 +40,25 @@ public class ClimbParams {
     final String loggingPrefix = "commands/climb/climbParams/";
 
     if (x_pos <= mid_field_x) { // IF BLUE
-      omegaMultiplier = 1;
-      xMultiplier = 1;
-      yMultiplier = -1;
-      step2YMult = 1;
-      if (y_pos >= 3.75285) { // IF right
+      if (y_pos >= 3.75285) { // IF right (if standing in middle of field)
         Logger.recordOutput(loggingPrefix + "condition", 2);
-        goal = new Pose2d(Inches.of(42.25), Inches.of(177), new Rotation2d());
-        isFront = true;
+        goal = new Pose2d(Inches.of(41), Inches.of(177), new Rotation2d());
       } else // ELSE left
       {
-        step2YMult = -1;
         Logger.recordOutput(loggingPrefix + "condition", 4);
-        goal = new Pose2d(Inches.of(40.75), Inches.of(117), new Rotation2d());
-        isFront = false;
+        goal = new Pose2d(Inches.of(41), Inches.of(117), new Rotation2d());
       }
     } // END IF BLUE
     else // ELSE red
     {
-      omegaMultiplier = 1;
-      xMultiplier = -1;
-      yMultiplier = -1;
-      step2YMult = -1;
-      if (y_pos <= 4.318) // IF right
+      if (y_pos <= 4.318) // IF right (If standing in center of field)
       {
         Logger.recordOutput(loggingPrefix + "condition", 1); // Left red climb align
-        goal = new Pose2d(Inches.of(43), Inches.of(136), new Rotation2d());
-        isFront = true;
+        goal = new Pose2d(Inches.of(250), Inches.of(136), new Rotation2d());
       } else // ELSE left
       {
-        step2YMult = 1;
         Logger.recordOutput(loggingPrefix + "condition", 3);
-        Logger.recordOutput("testt/x sign", xMultiplier);
-
-        goal = new Pose2d(Inches.of(40.75), Inches.of(195), new Rotation2d());
-        isFront = false;
+        goal = new Pose2d(Inches.of(250), Inches.of(195), new Rotation2d());
       }
     } // END ELSE RED
   }
@@ -92,15 +75,7 @@ public class ClimbParams {
     return yMultiplier;
   }
 
-  public int getStep2YMultiplier() {
-    return step2YMult;
-  }
-
   public int getOmegaMultiplier() {
     return omegaMultiplier;
-  }
-
-  public boolean getIsFront() {
-    return isFront;
   }
 }
