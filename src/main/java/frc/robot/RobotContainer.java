@@ -28,24 +28,11 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.ClimbAlign;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.ElevatorDown;
-import frc.robot.commands.ElevatorUp;
-import frc.robot.commands.FlywheelSpinUp;
 import frc.robot.commands.PassAlign;
-import frc.robot.commands.PassShoot;
-import frc.robot.commands.RunIntake;
-import frc.robot.commands.Shoot;
 // import frc.robot.commands.ClimbRight;
 import frc.robot.commands.ShootAlign;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.Belt;
 import frc.robot.subsystems.Climb;
-import frc.robot.subsystems.Flywheel;
-import frc.robot.subsystems.Hood;
-import frc.robot.subsystems.Indexer;
-import frc.robot.subsystems.Intake;
-import frc.robot.subsystems.LED;
-import frc.robot.subsystems.Pivot;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -68,16 +55,9 @@ import java.util.function.DoubleSupplier;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
-  private Intake s_intake;
-  public Climb s_climb;
-  public Pivot s_pivot; // On purpose so that we can go down at start of match/auto
-  private Indexer s_indexer;
-  private Flywheel s_flywheel;
-  private Belt s_belt;
-  private Hood s_hood;
-  private LED s_led;
   // private final Vision vision
   private Vision vision;
+  private Climb s_climb;
   // Sensors
   private Pigeon2 pigeon;
   private CANdle candle;
@@ -108,15 +88,7 @@ public class RobotContainer {
                 new VisionIOPhotonVision(camera3Name, robotToCamera3));
         pigeon = new Pigeon2(Constants.Sensors.pigeonId, Constants.canbus);
         candle = new CANdle(Constants.Sensors.candleId, Constants.canbus);
-        s_led = new LED(candle);
-        s_intake = new Intake();
         s_climb = new Climb();
-        s_pivot = new Pivot();
-        s_indexer = new Indexer();
-        s_flywheel = new Flywheel();
-        s_hood = new Hood();
-        s_belt = new Belt();
-
         // vision = new Vision(Constants.Vision.cameraNames, pigeon, drive);
         break;
 
@@ -139,14 +111,7 @@ public class RobotContainer {
 
         pigeon = new Pigeon2(Constants.Sensors.pigeonId, Constants.canbus);
         candle = new CANdle(Constants.Sensors.candleId, Constants.canbus);
-        s_led = new LED(candle);
-        s_intake = new Intake();
         s_climb = new Climb();
-        s_pivot = new Pivot();
-        s_indexer = new Indexer();
-        s_flywheel = new Flywheel();
-        s_hood = new Hood();
-        s_belt = new Belt();
 
         break;
 
@@ -168,14 +133,8 @@ public class RobotContainer {
                 new VisionIO() {});
         pigeon = new Pigeon2(Constants.Sensors.pigeonId, Constants.canbus);
         candle = new CANdle(Constants.Sensors.candleId, Constants.canbus);
-        s_led = new LED(candle);
-        s_intake = new Intake();
         s_climb = new Climb();
-        s_pivot = new Pivot();
-        s_indexer = new Indexer();
-        s_flywheel = new Flywheel();
-        s_hood = new Hood();
-        s_belt = new Belt();
+
         break;
     }
     NamedCommands.registerCommand(
@@ -193,7 +152,6 @@ public class RobotContainer {
         "hubAlign",
         new ShootAlign(
             drive,
-            s_led,
             controllerX,
             controllerY)); // Not sure if this is right - talk about with Cole later
     // Set up auto routines
@@ -246,28 +204,9 @@ public class RobotContainer {
     //             .ignoringDisable(true));
     driver
         .rightTrigger(0.2)
-        .whileTrue(
-            new ShootAlign(drive, s_led, () -> -driver.getLeftY(), () -> -driver.getLeftX()));
+        .whileTrue(new ShootAlign(drive, () -> -driver.getLeftY(), () -> -driver.getLeftX()));
     driver.rightBumper().whileTrue(new ClimbAlign(drive, s_climb));
-    driver.leftTrigger(0.2).whileTrue(new PassAlign(s_led, drive));
-    operator.rightBumper().whileTrue(new ElevatorDown(s_led, s_climb));
-    operator.leftBumper().whileTrue(new ElevatorUp(s_led, s_climb));
-    operator.leftTrigger(0.2).onTrue(new FlywheelSpinUp(s_flywheel));
-    operator
-        .rightTrigger(0.2)
-        .whileTrue(
-            new Shoot(s_led, s_flywheel, s_indexer, s_belt, s_intake, s_pivot, s_hood, drive));
-    operator
-        .b()
-        .whileTrue(
-            new PassShoot(s_led, s_flywheel, s_indexer, s_belt, s_intake, s_pivot, s_hood, drive));
-    operator.x().whileTrue(new RunIntake(s_led, s_intake));
-    operator.a().onTrue(new InstantCommand(() -> s_led.setIsAngry(true)));
-    operator.a().onFalse(new InstantCommand(() -> s_led.setIsAngry(false)));
-    operator.y().onTrue(new InstantCommand(() -> s_led.setIsHappy(true)));
-    operator.y().onFalse(new InstantCommand(() -> s_led.setIsHappy(false)));
-    operator.back().onTrue(new InstantCommand(() -> s_led.setIsRainbow(true)));
-    operator.back().onFalse(new InstantCommand(() -> s_led.setIsRainbow(false)));
+    driver.leftTrigger(0.2).whileTrue(new PassAlign(drive));
     // SmartDashboard.putNumber("yPID_P", 0.6);
     // SmartDashboard.putNumber("yPID_I", 0.03);
     // SmartDashboard.putNumber("yPID_D", 0.1);

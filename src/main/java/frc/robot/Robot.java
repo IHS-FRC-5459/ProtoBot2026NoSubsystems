@@ -139,7 +139,6 @@ public class Robot extends LoggedRobot {
     if (autonomousCommand != null) {
       autonomousCommand.schedule();
     }
-    robotContainer.s_pivot.goDown();
   }
 
   /** This function is called periodically during autonomous. */
@@ -156,8 +155,6 @@ public class Robot extends LoggedRobot {
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }
-    robotContainer.s_climb.setGoal(0);
-    robotContainer.s_climb.setGrab(-2);
   }
 
   /** This function is called periodically during operator control. */

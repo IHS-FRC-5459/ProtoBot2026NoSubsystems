@@ -25,8 +25,8 @@ import org.littletonrobotics.junction.Logger;
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class ClimbAlign extends Command {
   Drive s_drive;
-  Climb s_climb;
   DistanceSide sideDistCache;
+  Climb s_climb;
   private final double xFFKs = 0.2;
   private final double omegaFFKs = 0.2;
   private final double omegaPIDI = 0;
