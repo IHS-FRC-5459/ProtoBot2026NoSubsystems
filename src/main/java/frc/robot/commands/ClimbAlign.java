@@ -13,11 +13,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.Climb;
-import frc.robot.subsystems.DistanceCaching;
-import frc.robot.subsystems.DistanceSide;
 import frc.robot.subsystems.drive.Drive;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
@@ -25,27 +21,26 @@ import org.littletonrobotics.junction.Logger;
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class ClimbAlign extends Command {
   Drive s_drive;
-  DistanceSide sideDistCache;
-  Climb s_climb;
   private final double xFFKs = 0.2;
   private final double omegaFFKs = 0.2;
-  private final double omegaPIDI = 0;
-  PIDController yPID = new PIDController(0.65, 0.03, 0.2);
+  private final double yFFKs = 0;
+  private final double xDeadspace = 0.015; // in m
+  private final double omegaDeadspace = 2; // in deg
+  private final double stoppingDist = -0.05; // in m. Also known as yDeadspace
+
+  PIDController yPID = new PIDController(0.7, 0.03, 0.2);
   PIDController xPID = new PIDController(1.5, 0.02, 0.03);
-  PIDController omegaPID = new PIDController(2.5, omegaPIDI, 0.02);
+  PIDController omegaPID = new PIDController(2.5, 0, 0.02);
   SimpleMotorFeedforward xFF = new SimpleMotorFeedforward(xFFKs, 0, 0);
   SimpleMotorFeedforward omegaFF = new SimpleMotorFeedforward(omegaFFKs, 0, 0);
   SimpleMotorFeedforward yFF = new SimpleMotorFeedforward(0.23, 0, 0);
-  private final double stoppingDist = 0.12;
   private final String loggingPrefix = "commands/climb/";
   /** Creates a new Climb. */
   // Climbs the right side of the climb structure(from the perspective of the alliance station)
-  public ClimbAlign(Drive s_drive, Climb s_climb) {
+  public ClimbAlign(Drive s_drive) {
     // Use addRequirements() here to declare subsystem dependencies.
     // addRequirements(s_drive);
     this.s_drive = s_drive;
-    this.s_climb = s_climb;
-    this.sideDistCache = s_climb.getDistanceSide();
   }
 
   // Called when the command is initially scheduled.
@@ -54,6 +49,7 @@ public class ClimbAlign extends Command {
   boolean isFirstTime = false;
   long startOfTransition = 0;
   ClimbParams climbParams;
+  boolean xEnabled, yEnabled, omegaEnabled;
 
   @Override
   public void initialize() {
@@ -66,20 +62,12 @@ public class ClimbAlign extends Command {
     isFirstTime = true;
     xFF.setKs(xFFKs);
     omegaFF.setKs(omegaFFKs);
-    omegaPID.setI(omegaPIDI);
     Pose2d currPose = s_drive.getPose();
     climbParams = new ClimbParams(currPose);
-  }
-
-  // Called every time the scheduler runs while the command is scheduled.
-  private boolean isDone = false;
-  // 0 = x & omega   1 = turn wheels to 90deg   2 = y
-  // private boolean omegaPassed1, yPassed, xPassed = false;
-  private SwerveModulePosition[] snapshotModulesY = new SwerveModulePosition[4];
-
-  @Override
-  public void execute() {
-    double passingX, passingY, passingOmega;
+    Logger.recordOutput(loggingPrefix + "phase", "start");
+    xEnabled = true;
+    yEnabled = true;
+    omegaEnabled = true;
     // xPID.setP(SmartDashboard.getNumber("xPID_P", 0.1));
     // xPID.setI(SmartDashboard.getNumber("xPID_I", 0));
     // xPID.setD(SmartDashboard.getNumber("xPID_D", 0));
@@ -92,25 +80,44 @@ public class ClimbAlign extends Command {
     // omegaPID.setI(SmartDashboard.getNumber("omegaPID_I", 0));
     // omegaPID.setD(SmartDashboard.getNumber("omegaPID_D", 0));
     // omegaFF.setKs(SmartDashboard.getNumber("omegaFF_S", 0));
-    // boolean xEnabled = SmartDashboard.getBoolean("xEnabled", false);
-    // boolean yEnabled = SmartDashboard.getBoolean("yEnabled", false);
-    // boolean omegaEnabled = SmartDashboard.getBoolean("omegaEnabled", false);
+    // xEnabled = SmartDashboard.getBoolean("xEnabled", false);
+    // yEnabled = SmartDashboard.getBoolean("yEnabled", false);
+    // omegaEnabled = SmartDashboard.getBoolean("omegaEnabled", false);
+    // Logger.recordOutput(loggingPrefix + "pidConsts/x/P", xPID.getP());
+    // Logger.recordOutput(loggingPrefix + "pidConsts/x/I", xPID.getI());
+    // Logger.recordOutput(loggingPrefix + "pidConsts/x/D", xPID.getD());
+    // Logger.recordOutput(loggingPrefix + "pidConsts/x/ffS", xFF.getKs());
+    // Logger.recordOutput(loggingPrefix + "pidConsts/y/P", yPID.getP());
+    // Logger.recordOutput(loggingPrefix + "pidConsts/y/I", yPID.getI());
+    // Logger.recordOutput(loggingPrefix + "pidConsts/y/D", yPID.getD());
+    // Logger.recordOutput(loggingPrefix + "pidConsts/y/ffS", yFF.getKs());
+    // Logger.recordOutput(loggingPrefix + "pidConsts/omega/P", omegaPID.getP());
+    // Logger.recordOutput(loggingPrefix + "pidConsts/omega/I", omegaPID.getI());
+    // Logger.recordOutput(loggingPrefix + "pidConsts/omega/D", omegaPID.getD());
+    // Logger.recordOutput(loggingPrefix + "pidConsts/omega/ffS", omegaFF.getKs());
+  }
+
+  // Called every time the scheduler runs while the command is scheduled.
+  private boolean isDone = false;
+  // 0 = x & omega   1 = turn wheels to 90deg   2 = y
+  // private boolean omegaPassed1, yPassed, xPassed = false;
+
+  @Override
+  public void execute() {
+    Logger.recordOutput(loggingPrefix + "phase", "running");
+    double passingX, passingY, passingOmega;
     // stoppingDist = SmartDashboard.getNumber("stoppingDist", stoppingDist);
-    boolean xEnabled = true;
-    boolean yEnabled = true;
-    boolean omegaEnabled = true;
-    DistanceCaching distCache = s_climb.getDistanceCacheBack();
-    if (climbParams.getIsFront()) {
-      distCache = s_climb.getDistanceCacheFront();
-    }
+    // boolean xEnabled = true;
+    // boolean yEnabled = true;
+    // boolean omegaEnabled = true;
     Logger.recordOutput(loggingPrefix + "goal", climbParams.getGoal());
-    Logger.recordOutput(loggingPrefix + "leftfiltered", distCache.getLeftFiltered());
     // want to go to to make sure we are going in with good alignment
     // Blue alliance
 
     // Note, the 2ft buffer distance is now gone
     double directionMult = 1;
     Pose2d climbPose = climbParams.getGoal();
+    Pose2d currPose = s_drive.getPose();
     Logger.recordOutput(loggingPrefix + "climbPose", climbPose);
     // X
 
@@ -118,84 +125,82 @@ public class ClimbAlign extends Command {
     DoubleSupplier xSupplier;
     DoubleSupplier ySupplier;
 
-    if (distCache.bothValid()) {
-      passingX = (distCache.getXDistance() - climbPose.getX()) * climbParams.getXMultiplier();
-      if (Math.abs(passingX) <= 0.015) {
-        Logger.recordOutput(loggingPrefix + "setXFFTo0", true);
+    double xPassing = 0;
+    double omegaPassing = 0;
+    double yPassing = 0;
+    // X
+    {
+      double deltaX = climbPose.getX() - currPose.getX();
+      if (Math.abs(deltaX) <= 0.015) {
         xFF.setKs(0);
-      }
-      double rangeDiff = distCache.getDifference();
-      Logger.recordOutput(loggingPrefix + "hitCondition", false);
-      if (Math.abs(rangeDiff) <= 0.005) {
-        Logger.recordOutput(loggingPrefix + "hitCondition", true);
-        Logger.recordOutput(loggingPrefix + "hasHitCondition", true);
-        omegaFF.setKs(0);
-      }
-      passingOmega = rangeDiff * climbParams.getOmegaMultiplier();
-    } else {
-      if (distCache.rightMeasurementsValid()) {
-        passingX = (distCache.getRightFiltered() - climbPose.getX()) * climbParams.getXMultiplier();
-        if (Math.abs(passingX) <= 0.0381) { // 1.5in
-          xFF.setKs(0);
-        }
-      } else if (distCache.leftMeasurementsValid()) {
-        passingX = (distCache.getLeftFiltered() - climbPose.getX()) * climbParams.getXMultiplier();
-        if (Math.abs(passingX) <= 0.0381) { // 1.5in
-          xFF.setKs(0);
-        }
       } else {
-        passingX = 0;
-        Logger.recordOutput(loggingPrefix + "bothvalid", 0);
+        xFF.setKs(xFFKs);
       }
-      passingOmega = 0;
+      xPassing = deltaX * climbParams.getXMultiplier();
     }
+    // Omega
+    {
+      double deltaOmega =
+          climbPose.getRotation().getDegrees() - currPose.getRotation().getDegrees();
+      if (Math.abs(deltaOmega) <= 2) {
+        omegaFF.setKs(0);
+      } else {
+        omegaFF.setKs(omegaFFKs);
+      }
+      omegaPassing = deltaOmega * climbParams.getOmegaMultiplier();
+    }
+    // Y
+    {
+      double deltaY = climbPose.getY() - currPose.getY();
+      if (Math.abs(deltaY) <= 0.015) {
+        yFF.setKs(0);
+      } else {
+        yFF.setKs(yFFKs);
+      }
 
-    double deltaY = sideDistCache.getDistanceFiltered() * -directionMult; // .4064=16in to m
-    if (!sideDistCache.measurementsValid()) {
-      // Use localization
-      Pose2d currPose = s_drive.getPose();
-      deltaY = Math.abs(climbPose.getY() - currPose.getY()) * -directionMult;
+      if (Math.abs(deltaY) < stoppingDist) {
+        deltaY = 0;
+        isDone = true;
+      }
+      yPassing = deltaY * climbParams.getYMultiplier();
     }
-    passingY = -deltaY * climbParams.getStep2YMultiplier();
     Logger.recordOutput(loggingPrefix + "yDone", false);
-    if (Math.abs(deltaY) <= stoppingDist) {
-      Logger.recordOutput(loggingPrefix + "yDone", true);
-      isDone = true;
-      passingY = 0;
-    }
-    System.out.println("Command running");
 
-    double pidVoltsOmega = omegaPID.calculate(passingOmega, 0) * -1;
-    double ffVoltsOmega = omegaFF.calculate(passingOmega, 0);
+    double pidVoltsOmega = omegaPID.calculate(omegaPassing, 0) * -1;
+    double ffVoltsOmega = omegaFF.calculate(omegaPassing, 0);
     Logger.recordOutput(loggingPrefix + "controllers/omega/pidVolts", pidVoltsOmega);
     Logger.recordOutput(loggingPrefix + "controllers/omega/ffVolts", ffVoltsOmega);
     omegaSupplier = () -> pidVoltsOmega + ffVoltsOmega;
 
-    double pidVoltsX = xPID.calculate(passingX, 0);
-    double ffVoltsX = xFF.calculate(passingX, 0) * -1;
+    double pidVoltsX = xPID.calculate(xPassing, 0);
+    double ffVoltsX = xFF.calculate(xPassing, 0) * -1;
     Logger.recordOutput(loggingPrefix + "controllers/x/pidVolts", pidVoltsX);
     Logger.recordOutput(loggingPrefix + "controllers/x/ffVolts", ffVoltsX);
     xSupplier = () -> pidVoltsX + ffVoltsX;
 
-    double pidVoltsY = yPID.calculate(passingY, 0);
-    double ffVoltsY = yFF.calculate(passingY, 0) * -1;
+    double pidVoltsY = yPID.calculate(yPassing, 0);
+    double ffVoltsY = yFF.calculate(yPassing, 0) * -1;
     Logger.recordOutput(loggingPrefix + "controllers/y/pidVolts", 0);
     Logger.recordOutput(loggingPrefix + "controllers/y/ffVolts", 0);
     ySupplier = () -> MathUtil.clamp(pidVoltsY + ffVoltsY, -0.5, 0.5);
-    // if (!yEnabled) {
-    //   ySupplier = () -> 0;
-    // }
-    // if (!xEnabled) {
-    //   xSupplier = () -> 0;
-    // }
-    // if (!omegaEnabled) {
-    //   omegaSupplier = () -> 0;
-    // }
 
-    Logger.recordOutput(loggingPrefix + "passing/xPassing", passingX);
-    Logger.recordOutput(loggingPrefix + "passing/omegaPassing", passingOmega);
-    Logger.recordOutput(loggingPrefix + "passing/yPassing", passingY);
+    if (!yEnabled) {
+      ySupplier = () -> 0;
+    }
+    if (!xEnabled) {
+      xSupplier = () -> 0;
+    }
+    if (!omegaEnabled) {
+      omegaSupplier = () -> 0;
+    }
 
+    Logger.recordOutput(loggingPrefix + "passing/xPassing", xPassing);
+    Logger.recordOutput(loggingPrefix + "passing/omegaPassing", omegaPassing);
+    Logger.recordOutput(loggingPrefix + "passing/yPassing", yPassing);
+
+    // ySupplier = () -> 0;
+    // xSupplier = () -> 0;
+    // omegaSupplier = () -> 0;
     // omegaPassed = omegaPassed && time < 100; // bad practice, but its fine :)
     Logger.recordOutput(loggingPrefix + "xSupplier", xSupplier.getAsDouble());
     joystickDriveRelativeCustom(s_drive, xSupplier, ySupplier, omegaSupplier, true);
@@ -203,7 +208,9 @@ public class ClimbAlign extends Command {
 
   // Called once the command ends or is interrupted.
   @Override
-  public void end(boolean interrupted) {}
+  public void end(boolean interrupted) {
+    Logger.recordOutput(loggingPrefix + "phase", "end1");
+  }
 
   // Returns true when the command should end.
   @Override

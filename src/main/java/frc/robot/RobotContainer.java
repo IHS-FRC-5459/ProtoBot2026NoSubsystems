@@ -32,7 +32,6 @@ import frc.robot.commands.PassAlign;
 // import frc.robot.commands.ClimbRight;
 import frc.robot.commands.ShootAlign;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.Climb;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -57,7 +56,6 @@ public class RobotContainer {
   private final Drive drive;
   // private final Vision vision
   private Vision vision;
-  private Climb s_climb;
   // Sensors
   private Pigeon2 pigeon;
   private CANdle candle;
@@ -88,7 +86,6 @@ public class RobotContainer {
                 new VisionIOPhotonVision(camera3Name, robotToCamera3));
         pigeon = new Pigeon2(Constants.Sensors.pigeonId, Constants.canbus);
         candle = new CANdle(Constants.Sensors.candleId, Constants.canbus);
-        s_climb = new Climb();
         // vision = new Vision(Constants.Vision.cameraNames, pigeon, drive);
         break;
 
@@ -111,7 +108,6 @@ public class RobotContainer {
 
         pigeon = new Pigeon2(Constants.Sensors.pigeonId, Constants.canbus);
         candle = new CANdle(Constants.Sensors.candleId, Constants.canbus);
-        s_climb = new Climb();
 
         break;
 
@@ -133,8 +129,6 @@ public class RobotContainer {
                 new VisionIO() {});
         pigeon = new Pigeon2(Constants.Sensors.pigeonId, Constants.canbus);
         candle = new CANdle(Constants.Sensors.candleId, Constants.canbus);
-        s_climb = new Climb();
-
         break;
     }
     NamedCommands.registerCommand(
@@ -143,7 +137,7 @@ public class RobotContainer {
             () -> {
               System.out.println("hi");
             }));
-    NamedCommands.registerCommand("climbAlign", new ClimbAlign(drive, s_climb));
+    NamedCommands.registerCommand("climbAlign", new ClimbAlign(drive));
     DoubleSupplier controllerY =
         () -> 0; // Here just to use hub align when testing CHANGE LATER/DISCUSS WITH COLE
     DoubleSupplier controllerX =
@@ -205,7 +199,7 @@ public class RobotContainer {
     driver
         .rightTrigger(0.2)
         .whileTrue(new ShootAlign(drive, () -> -driver.getLeftY(), () -> -driver.getLeftX()));
-    driver.rightBumper().whileTrue(new ClimbAlign(drive, s_climb));
+    driver.rightBumper().whileTrue(new ClimbAlign(drive));
     driver.leftTrigger(0.2).whileTrue(new PassAlign(drive));
     // SmartDashboard.putNumber("yPID_P", 0.6);
     // SmartDashboard.putNumber("yPID_I", 0.03);
