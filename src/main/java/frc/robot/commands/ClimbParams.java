@@ -22,8 +22,8 @@ import org.littletonrobotics.junction.Logger;
 /** Add your docs here. */
 public class ClimbParams {
   private int xMultiplier = 1; // Sign for x-direction
-  private int yMultiplier = 1; // Sign for y-direction
-  private int omegaMultiplier = 1; // Sign for rotation
+  private int yMultiplier = -1; // Sign for y-direction
+  private int omegaMultiplier = -1; // Sign for rotation
   private boolean isFront = false;
   private Pose2d goal;
 
@@ -41,11 +41,21 @@ public class ClimbParams {
 
     if (x_pos <= mid_field_x) { // IF BLUE
       if (y_pos >= 3.75285) { // IF right (if standing in middle of field)
+        // ---- NOT A TARGET CLIMB ---- //
         Logger.recordOutput(loggingPrefix + "condition", 2);
+        // NOT SET YET
+        xMultiplier = 1; // Sign for x-direction
+        yMultiplier = -1; // Sign for y-direction
+        omegaMultiplier = -1; // Sign for rotation
         goal = new Pose2d(Inches.of(41), Inches.of(177), new Rotation2d());
+
       } else // ELSE left
       {
+        // --- THIS IS THE BLUE TARGET CLIMB ----- //
         Logger.recordOutput(loggingPrefix + "condition", 4);
+        xMultiplier = -1; // VERIFIED
+        yMultiplier = -1; // VERIFIED
+        omegaMultiplier = 1; // VERIFIED
         goal = new Pose2d(Inches.of(41), Inches.of(117), new Rotation2d());
       }
     } // END IF BLUE
@@ -53,10 +63,20 @@ public class ClimbParams {
     {
       if (y_pos <= 4.318) // IF right (If standing in center of field)
       {
+        // ------ NOT A TARGET CLIMB ------ //
+        // NOT SET YET
+        xMultiplier = 1; // Sign for x-direction
+        yMultiplier = -1; // Sign for y-direction
+        omegaMultiplier = -1; // Sign for rotation
         Logger.recordOutput(loggingPrefix + "condition", 1); // Left red climb align
         goal = new Pose2d(Inches.of(250), Inches.of(136), new Rotation2d());
       } else // ELSE left
       {
+        // --- THIS IS THE RED TARGET CLIMB --- //
+        // NOT SET YET
+        xMultiplier = -1; // NOT VERIFED
+        yMultiplier = -1; // NOT VERIFIED
+        omegaMultiplier = -1; // NOT VERIFIED
         Logger.recordOutput(loggingPrefix + "condition", 3);
         goal = new Pose2d(Inches.of(250), Inches.of(195), new Rotation2d());
       }
