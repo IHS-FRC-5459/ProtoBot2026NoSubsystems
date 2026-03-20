@@ -91,11 +91,11 @@ public class Vision extends SubsystemBase {
 
   @Override
   public void periodic() {
-    this.setRelativeStdDevFacotor(0, SmartDashboard.getNumber("FLrelativeCamStdDevMult", 1));
-    this.setRelativeStdDevFacotor(1, SmartDashboard.getNumber("FRrelativeCamStdDevMult", 1));
-    this.setRelativeStdDevFacotor(2, SmartDashboard.getNumber("BLrelativeCamStdDevMult", 1));
-    this.setRelativeStdDevFacotor(3, SmartDashboard.getNumber("BRrelativeCamStdDevMult", 1));
-    this.setUniversalVisionStdDevMult(SmartDashboard.getNumber("UniversalVisionStdDevMult", 1));
+    // this.setRelativeStdDevFacotor(0, SmartDashboard.getNumber("FLrelativeCamStdDevMult", 1));
+    // this.setRelativeStdDevFacotor(1, SmartDashboard.getNumber("FRrelativeCamStdDevMult", 1));
+    // this.setRelativeStdDevFacotor(2, SmartDashboard.getNumber("BLrelativeCamStdDevMult", 1));
+    // this.setRelativeStdDevFacotor(3, SmartDashboard.getNumber("BRrelativeCamStdDevMult", 1));
+    // this.setUniversalVisionStdDevMult(SmartDashboard.getNumber("UniversalVisionStdDevMult", 1));
     for (int i = 0; i < io.length; i++) {
       io[i].updateInputs(inputs[i]);
       Logger.processInputs("Vision/Camera" + Integer.toString(i), inputs[i]);
