@@ -30,7 +30,7 @@ public class VisionConstants {
   public static Transform3d robotToCamera0 = // Front left Camera
       new Transform3d(
           new Translation3d(0.2794, 0.2286, 0.282575),
-          new Rotation3d(0, Math.toRadians(-30), Math.toRadians(-35))); // Back 30, in 35
+          new Rotation3d(0, Math.toRadians(-30), Math.toRadians(-15))); // Back 30, in 35
   public static Transform3d robotToCamera1 = // Front right camera
       new Transform3d(
           new Translation3d(0.276225, -0.2286, 0.282575),
@@ -38,11 +38,11 @@ public class VisionConstants {
   public static Transform3d robotToCamera2 = // Back left camera
       new Transform3d(
           new Translation3d(0, 0.2413, 0.50165),
-          new Rotation3d(0, Math.toRadians(5), Math.toRadians(180))); // Up 5, straight back
+          new Rotation3d(0, Math.toRadians(-5), Math.toRadians(140))); // Up 5, straight back
   public static Transform3d robotToCamera3 = // Back right camera
       new Transform3d(
           new Translation3d(0, -0.2413, 0.50165),
-          new Rotation3d(0, Math.toRadians(5), Math.toRadians(180))); // Up 5, straight back
+          new Rotation3d(0, Math.toRadians(-5), Math.toRadians(180))); // Up 5, straight back
   // Basic filtering thresholds
   public static double maxAmbiguity = 0.3;
   public static double maxZError = 0.75;

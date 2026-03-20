@@ -218,10 +218,16 @@ public class RobotContainer {
     // SmartDashboard.putBoolean("omegaEnabled", false);
     // SmartDashboard.putBoolean("step1Done", true);
     // SmartDashboard.putNumber("stoppingDist", 0.0508);
-    SmartDashboard.putNumber("omegaPID_P", 2.5);
-    SmartDashboard.putNumber("omgeaPID_I", 0);
-    SmartDashboard.putNumber("omegaPID_D", 0.02);
-    SmartDashboard.putNumber("omegaFF_S", 0.15);
+    // SmartDashboard.putNumber("omegaPID_P", 2.5);
+    // SmartDashboard.putNumber("omgeaPID_I", 0);
+    // SmartDashboard.putNumber("omegaPID_D", 0.02);
+    // SmartDashboard.putNumber("omegaFF_S", 0.15);
+
+    SmartDashboard.putNumber("FLrelativeCamStdDevMult", 1);
+    SmartDashboard.putNumber("FRrelativeCamStdDevMult", 1);
+    SmartDashboard.putNumber("BLrelativeCamStdDevMult", 1);
+    SmartDashboard.putNumber("BRrelativeCamStdDevMult", 1);
+    SmartDashboard.putNumber("UniversalVisionStdDevMult", 1);
   }
 
   /**
