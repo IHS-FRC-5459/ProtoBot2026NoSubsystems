@@ -160,6 +160,15 @@ public class Drive extends SubsystemBase {
   }
 
   Field2d field = new Field2d();
+  boolean isAuto = true;
+
+  public void setIsAuto(boolean bool) {
+    this.isAuto = bool;
+  }
+
+  public boolean getIsAuto() {
+    return this.isAuto;
+  }
 
   @Override
   public void periodic() {
