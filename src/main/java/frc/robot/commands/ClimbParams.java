@@ -56,7 +56,7 @@ public class ClimbParams {
         xMultiplier = -1; // VERIFIED
         yMultiplier = -1; // VERIFIED
         omegaMultiplier = 1; // VERIFIED
-        goal = new Pose2d(Inches.of(41), Inches.of(117), new Rotation2d());
+        goal = new Pose2d(Inches.of(41), Inches.of(120), new Rotation2d());
       }
     } // END IF BLUE
     else // ELSE red

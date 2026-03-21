@@ -13,7 +13,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
 import java.util.function.DoubleSupplier;
@@ -23,15 +22,17 @@ import org.littletonrobotics.junction.Logger;
 public class ClimbAlign extends Command {
   Drive s_drive;
   private final double xFFKs = 0.1; // Changed from 0.2 to 0.1
-  private double omegaFFKs = 0.15;
+  private double omegaFFKs = 0.01;
   private final double yFFKs = 0.2;
   private final double xDeadspace = 0.015; // in m
   private final double omegaDeadspace = 2; // in deg
-  private final double stoppingDist = 0; // in m. Also known as yDeadspace
+  private final double stoppingDist = 0.1; // in m. Also known as yDeadspace
+  private final double omegaPIDP = 0.1;
+  private final double omegaPIDD = 0;
 
   PIDController yPID = new PIDController(0.7, 0.03, 0.2);
   PIDController xPID = new PIDController(1.5, 0.02, 0.03);
-  PIDController omegaPID = new PIDController(2.5, 0, 0.02);
+  PIDController omegaPID = new PIDController(0.1, 0, 0);
   SimpleMotorFeedforward xFF = new SimpleMotorFeedforward(xFFKs, 0, 0);
   SimpleMotorFeedforward omegaFF = new SimpleMotorFeedforward(omegaFFKs, 0, 0);
   SimpleMotorFeedforward yFF = new SimpleMotorFeedforward(yFFKs, 0, 0);
@@ -77,10 +78,10 @@ public class ClimbAlign extends Command {
     // yPID.setI(SmartDashboard.getNumber("yPID_I", 0));
     // yPID.setD(SmartDashboard.getNumber("yPID_D", 0));
     // yFF.setKs(SmartDashboard.getNumber("yFF_S", 0));
-    omegaPID.setP(SmartDashboard.getNumber("omegaPID_P", 0));
-    omegaPID.setI(SmartDashboard.getNumber("omegaPID_I", 0));
-    omegaPID.setD(SmartDashboard.getNumber("omegaPID_D", 0));
-    omegaFFKs = SmartDashboard.getNumber("omegaFF_S", 0);
+    // omegaPID.setP(SmartDashboard.getNumber("omegaPID_P", 0));
+    // omegaPID.setI(SmartDashboard.getNumber("omegaPID_I", 0));
+    // omegaPID.setD(SmartDashboard.getNumber("omegaPID_D", 0));
+    // omegaFFKs = SmartDashboard.getNumber("omegaFF_S", 0);
     // xEnabled = SmartDashboard.getBoolean("xEnabled", false);
     // yEnabled = SmartDashboard.getBoolean("yEnabled", false);
     // omegaEnabled = SmartDashboard.getBoolean("omegaEnabled", false);
@@ -116,7 +117,7 @@ public class ClimbAlign extends Command {
     // Blue alliance
 
     // Note, the 2ft buffer distance is now gone
-    double directionMult = 1;
+    // double directionMult = 1;
     Pose2d climbPose = climbParams.getGoal();
     Pose2d currPose = s_drive.getPose();
     Logger.recordOutput(loggingPrefix + "climbPose", climbPose);
@@ -143,6 +144,7 @@ public class ClimbAlign extends Command {
     // End comment out
     // Omega
     {
+      // TODO FIX ANGLE WRAP
       double deltaOmega =
           climbPose.getRotation().getDegrees() - currPose.getRotation().getDegrees();
       if (Math.abs(deltaOmega) <= 2) {
@@ -151,6 +153,8 @@ public class ClimbAlign extends Command {
         omegaPID.setD(0);
       } else {
         omegaFF.setKs(omegaFFKs);
+        omegaPID.setP(omegaPIDP);
+        omegaPID.setD(omegaPIDD);
       }
       omegaPassing = deltaOmega * climbParams.getOmegaMultiplier();
     }
@@ -158,16 +162,14 @@ public class ClimbAlign extends Command {
     // Start comment out
     {
       double deltaY = climbPose.getY() - currPose.getY();
-      if (Math.abs(deltaY) <= 0.015) {
+      if (Math.abs(deltaY) <= stoppingDist) {
         yFF.setKs(0);
+        deltaY = 0;
+        isDone = true;
       } else {
         yFF.setKs(yFFKs);
       }
 
-      if (Math.abs(deltaY) < stoppingDist) {
-        deltaY = 0;
-        // isDone = true;
-      }
       yPassing = deltaY * climbParams.getYMultiplier();
     }
     // End comment out
